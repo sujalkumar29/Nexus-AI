@@ -1,0 +1,6 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Exclude original Stitch design folder
+stitch_nexus_ai_productivity_suite/
