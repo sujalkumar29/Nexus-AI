@@ -1,0 +1,176 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model KnowledgeSource {
+  id          String          @id @default(cuid())
+  title       String
+  fileName    String
+  fileType    String          @default("text")
+  fileSize    Int             @default(0)
+  category    String          @default("user") // "user" | "curated"
+  content     String
+  tokenCount  Int             @default(0)
+  status      String          @default("INDEXED") // "INDEXING" | "INDEXED" | "FAILED"
+  indexedAt   DateTime        @default(now())
+  chunks      DocumentChunk[]
+
+  @@index([category])
+  @@index([status])
+}
+
+model DocumentChunk {
+  id          String          @id @default(cuid())
+  sourceId    String
+  source      KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  chunkIndex  Int
+  content     String
+  section     String?
+  pageNumber  Int?
+  embedding   String?         // Stored as JSON serialized array of numbers
+  createdAt   DateTime        @default(now())
+
+  @@index([sourceId])
+}
+
+model Workflow {
+  id            String         @id @default(cuid())
+  runId         String         @unique
+  title         String
+  goal          String
+  status        String         @default("RUNNING") // "RUNNING" | "COMPLETED" | "FAILED"
+  examDate      DateTime?
+  targetHours   Float?
+  latencyMs     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  steps         WorkflowStep[]
+  revisionPlan  RevisionPlan?
+  studySessions StudySession[]
+  quiz          Quiz?
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model WorkflowStep {
+  id            String    @id @default(cuid())
+  workflowId    String
+  workflow      Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepIndex     Int
+  toolName      String
+  status        String    @default("COMPLETED") // "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+  inputPayload  String
+  outputPayload String
+  latencyMs     Int       @default(0)
+  verified      Boolean   @default(true)
+  error         String?
+  createdAt     DateTime  @default(now())
+
+  @@index([workflowId])
+  @@index([toolName])
+}
+
+model RevisionPlan {
+  id          String         @id @default(cuid())
+  workflowId  String         @unique
+  workflow    Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  title       String
+  examDate    DateTime
+  targetHours Float          @default(8.0)
+  status      String         @default("PERSISTED") // "DRAFT" | "PERSISTED"
+  topics      String         // JSON stringified array of topics
+  milestones  String         // JSON stringified array of milestones
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  sessions    StudySession[]
+}
+
+model StudySession {
+  id              String        @id @default(cuid())
+  planId          String?
+  plan            RevisionPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  workflowId      String?
+  workflow        Workflow?     @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+  title           String
+  focusTopic      String
+  startTime       DateTime
+  endTime         DateTime
+  durationMinutes Int
+  location        String        @default("Quiet Study 3B")
+  priority        String        @default("HIGH") // "CRITICAL" | "HIGH" | "MEDIUM"
+  status          String        @default("CONFIRMED") // "PROPOSED" | "CONFIRMED" | "COMPLETED" | "CONFLICT"
+  conflictDetails String?
+  verified        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([startTime])
+  @@index([status])
+}
+
+model Quiz {
+  id             String         @id @default(cuid())
+  quizCode       String         @unique
+  workflowId     String?        @unique
+  workflow       Workflow?      @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+  title          String
+  course         String         @default("CS452 Distributed Systems")
+  topic          String
+  difficulty     String         @default("medium")
+  totalQuestions Int            @default(5)
+  status         String         @default("SAVED")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  questions      QuizQuestion[]
+  attempts       QuizAttempt[]
+
+  @@index([quizCode])
+}
+
+model QuizQuestion {
+  id              String       @id @default(cuid())
+  quizId          String
+  quiz            Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionNumber  Int
+  prompt          String
+  options         String       // JSON array of { label: "A"|"B"|"C"|"D", text: string }
+  correctAnswer   String       // "A" | "B" | "C" | "D"
+  rationale       String
+  citation        String?
+  similarityScore Float?
+  createdAt       DateTime     @default(now())
+  answers         QuizAnswer[]
+
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id          String       @id @default(cuid())
+  quizId      String
+  quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score       Int
+  maxScore    Int
+  percentage  Float
+  completedAt DateTime     @default(now())
+  answers     QuizAnswer[]
+
+  @@index([quizId])
+}
+
+model QuizAnswer {
+  id             String       @id @default(cuid())
+  attemptId      String
+  attempt        QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedAnswer String
+  isCorrect      Boolean
+
+  @@index([attemptId])
+}

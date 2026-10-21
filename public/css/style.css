@@ -1,0 +1,81 @@
+/* Nexus AI Stylesheet — Precision Dark Glassmorphism */
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #0f131d;
+    color: #dfe2f1;
+    font-family: 'Inter', sans-serif;
+    overscroll-behavior: none;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0e18;
+}
+::-webkit-scrollbar-thumb {
+  background: #262a35;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3b494b;
+}
+
+/* Photonic AI Core Pulse Animation */
+@keyframes photonic-glow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.4), 0 0 32px rgba(5, 102, 217, 0.2);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 28px rgba(0, 240, 255, 0.8), 0 0 48px rgba(0, 240, 255, 0.4);
+  }
+}
+
+.animate-photonic {
+  animation: photonic-glow 3s ease-in-out infinite;
+}
+
+/* Smooth view transitions */
+.app-view {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+.app-view.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background-color: rgba(23, 27, 38, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-card-interactive:hover {
+  border-color: rgba(0, 240, 255, 0.3);
+  box-shadow: 0 8px 32px -4px rgba(0, 240, 255, 0.15);
+}
+
+/* Material symbol sizing */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.material-symbols-outlined.fill-1 {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  background: rgba(10, 14, 24, 0.8);
+  backdrop-filter: blur(8px);
+}
